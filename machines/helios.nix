@@ -13,15 +13,18 @@
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
 
-  # Traefik, the LAN DNS resolver, and SSH are reachable from the network.
-  networking.firewall.allowedTCPPorts = [
-    53
-    80
-    443
-  ];
-  networking.firewall.allowedUDPPorts = [
-    53
-  ];
+  # Nothing is published to the internet. Public HTTP(S) will arrive
+  # through a Cloudflare Tunnel (outbound). LAN clients may use SSH,
+  # DNS, and Traefik. Cluster pods reach those services on ClusterIPs
+  # and do not need these host ports.
+  networking.firewall.extraCommands = ''
+    iptables -A nixos-fw -s 192.168.1.0/24 -p tcp -m multiport --dports 22,53,80,443 -j nixos-fw-accept
+    iptables -A nixos-fw -s 192.168.1.0/24 -p udp --dport 53 -j nixos-fw-accept
+  '';
+  networking.firewall.extraStopCommands = ''
+    iptables -D nixos-fw -s 192.168.1.0/24 -p tcp -m multiport --dports 22,53,80,443 -j nixos-fw-accept || true
+    iptables -D nixos-fw -s 192.168.1.0/24 -p udp --dport 53 -j nixos-fw-accept || true
+  '';
   networking.firewall.trustedInterfaces = [
     "cni+"
     "flannel.1"
@@ -100,10 +103,11 @@
     HELM_PLUGINS = "${pkgs.kubernetes-helmPlugins.helm-diff}";
   };
 
-  # Key-only SSH, limited to the configured user. The OpenSSH module
-  # opens port 22 in the firewall.
+  # Key-only SSH, limited to the configured user. Port 22 is opened
+  # for the LAN in the firewall rules above, not by this module.
   services.openssh = {
     enable = true;
+    openFirewall = false;
     ports = [ 22 ];
     settings = {
       PasswordAuthentication = false;
