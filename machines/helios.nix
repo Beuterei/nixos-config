@@ -13,12 +13,14 @@
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
 
-  # Only Traefik (and SSH) is reachable from the network. The API and
-  # NodePorts stay closed until they are reached through a tunnel. CNI
-  # and flannel stay trusted so traffic inside the cluster is not filtered.
+  # Traefik, the LAN DNS resolver, and SSH are reachable from the network.
   networking.firewall.allowedTCPPorts = [
+    53
     80
     443
+  ];
+  networking.firewall.allowedUDPPorts = [
+    53
   ];
   networking.firewall.trustedInterfaces = [
     "cni+"
