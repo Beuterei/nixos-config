@@ -1,0 +1,38 @@
+# Host tasks. HOSTS must match nixosConfigurations in flake.nix.
+version: "3"
+
+vars:
+  HOSTS: helios
+
+tasks:
+  check:
+    desc: Evaluate the flake without activating it
+    vars: &host-var
+      HOST:
+        sh: 'set -- {{.CLI_ARGS}}; printf %s "${1-}"'
+    preconditions: &host-ok
+      - sh: |
+          set -- {{.CLI_ARGS}}
+          [ "$#" -eq 1 ] || exit 1
+          case " {{.HOSTS}} " in
+            *" $1 "*) exit 0 ;;
+            *) exit 1 ;;
+          esac
+        msg: "usage: task {{.TASK}} -- <host>  (hosts: {{.HOSTS}})"
+    cmds:
+      - nix flake check --no-build
+      - nix eval --raw .#nixosConfigurations.{{.HOST}}.config.system.build.toplevel.drvPath
+
+  test:
+    desc: Activate the configuration without making it the boot default
+    vars: *host-var
+    preconditions: *host-ok
+    cmds:
+      - sudo nixos-rebuild test --flake .#{{.HOST}}
+
+  switch:
+    desc: Activate the configuration and make it the boot default
+    vars: *host-var
+    preconditions: *host-ok
+    cmds:
+      - sudo nixos-rebuild switch --flake .#{{.HOST}}
