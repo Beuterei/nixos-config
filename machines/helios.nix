@@ -98,9 +98,16 @@
     extraFlags = [ "--write-kubeconfig-mode=644" ];
   };
 
+  # Default editor for every account. SOPS reads EDITOR.
+  programs.vim = {
+    enable = true;
+    defaultEditor = true;
+  };
+
   environment.sessionVariables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
     HELM_PLUGINS = "${pkgs.kubernetes-helmPlugins.helm-diff}";
+    VISUAL = "vim";
   };
 
   # Key-only SSH, limited to the configured user. Port 22 is opened
@@ -131,7 +138,6 @@
 
   environment.systemPackages = with pkgs; [
     docker-compose
-    vim
     btop
     nvtopPackages.nvidia
     nodejs_24

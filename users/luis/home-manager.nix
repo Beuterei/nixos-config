@@ -16,7 +16,6 @@
       user.name = "Luis Beu";
       user.email = "me@luisbeu.de";
       init.defaultBranch = "main";
-      core.editor = "vim";
     };
   };
 
