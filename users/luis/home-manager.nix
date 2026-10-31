@@ -23,10 +23,11 @@
   # source would be copied into the world-readable Nix store.
   programs.ssh = {
     enable = true;
-    matchBlocks."github.com" = {
-      user = "git";
-      identityFile = "~/.ssh/beuluis";
-      identitiesOnly = true;
+    enableDefaultConfig = false;
+    settings."github.com" = {
+      User = "git";
+      IdentityFile = "~/.ssh/beuluis";
+      IdentitiesOnly = true;
     };
   };
 
