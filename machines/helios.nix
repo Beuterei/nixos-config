@@ -142,6 +142,7 @@
     kustomize
     k9s
     fluxcd
+    sops
     git
     go-task
   ];

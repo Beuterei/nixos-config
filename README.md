@@ -51,6 +51,13 @@ Reinstall this flake onto the existing helios disks. Do not repartition. Boot a 
 
    - Wi-Fi, if NetworkManager has no saved connection.
    - GitHub over SSH. The private key stays at `~/.ssh` and is not part of this repo.
+   - SOPS age key:
+
+     ```sh
+     mkdir -p ~/.config/sops/age
+     echo 'AGE-SECRET-KEY-1...' > ~/.config/sops/age/keys.txt
+     chmod 600 ~/.config/sops/age/keys.txt
+     ```
 
 7. From the installed repo:
 
