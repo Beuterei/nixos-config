@@ -147,6 +147,7 @@
     helmfile
     kustomize
     k9s
+    sofka
     fluxcd
     velero
     sops

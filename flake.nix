@@ -9,10 +9,17 @@
       # Use the same nixpkgs revision as this flake.
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Not in nixpkgs yet.
+    sofka = {
+      url = "github:nklmilojevic/sofka";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
   };
 
-  outputs = { nixpkgs, ... }@inputs: let
-    overlays = [ ];
+  outputs = { nixpkgs, sofka, ... }@inputs: let
+    overlays = [ sofka.overlays.default ];
 
     mkSystem = import ./lib/mksystem.nix {
       inherit overlays nixpkgs inputs;
