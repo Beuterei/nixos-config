@@ -148,6 +148,7 @@
     kustomize
     k9s
     fluxcd
+    velero
     sops
     git
     go-task
