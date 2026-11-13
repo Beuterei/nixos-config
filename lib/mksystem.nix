@@ -25,6 +25,8 @@ nixpkgs.lib.nixosSystem {
     machineConfig
     userOSConfig
 
+    inputs.vscode-server.nixosModules.default
+
     inputs.home-manager.nixosModules.home-manager
     {
       home-manager.useGlobalPkgs = true;

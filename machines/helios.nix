@@ -98,6 +98,9 @@
     extraFlags = [ "--write-kubeconfig-mode=644" ];
   };
 
+  # Lets VS Code Remote-SSH work: patches the downloaded server for NixOS.
+  services.vscode-server.enable = true;
+
   # Default editor for every account. SOPS reads EDITOR.
   programs.vim = {
     enable = true;
