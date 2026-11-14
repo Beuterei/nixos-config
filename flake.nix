@@ -12,6 +12,11 @@
 
     vscode-server = {
       url = "github:nix-community/nixos-vscode-server";
+    };
+
+    # Claude Code, updated far more often than nixpkgs.
+    claude-code = {
+      url = "github:sadjow/claude-code-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -23,8 +28,8 @@
     };
   };
 
-  outputs = { nixpkgs, sofka, ... }@inputs: let
-    overlays = [ sofka.overlays.default ];
+  outputs = { nixpkgs, sofka, claude-code, ... }@inputs: let
+    overlays = [ sofka.overlays.default claude-code.overlays.default ];
 
     mkSystem = import ./lib/mksystem.nix {
       inherit overlays nixpkgs inputs;

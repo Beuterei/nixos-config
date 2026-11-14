@@ -55,5 +55,6 @@
   };
 
   home.packages = [
+    pkgs.claude-code
   ];
 }
