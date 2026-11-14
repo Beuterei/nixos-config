@@ -101,6 +101,10 @@
   # Lets VS Code Remote-SSH work: patches the downloaded server for NixOS.
   services.vscode-server.enable = true;
 
+  # Runs prebuilt generic-Linux binaries, such as the claude binary bundled
+  # with the Claude Code VS Code extension.
+  programs.nix-ld.enable = true;
+
   # Default editor for every account. SOPS reads EDITOR.
   programs.vim = {
     enable = true;
