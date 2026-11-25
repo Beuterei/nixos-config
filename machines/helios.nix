@@ -17,12 +17,13 @@
   # through a Cloudflare Tunnel (outbound). LAN clients may use SSH,
   # DNS, and Traefik. Cluster pods reach those services on ClusterIPs
   # and do not need these host ports.
+  # MQTT broker on 1883.
   networking.firewall.extraCommands = ''
-    iptables -A nixos-fw -s 192.168.1.0/24 -p tcp -m multiport --dports 22,53,80,443 -j nixos-fw-accept
+    iptables -A nixos-fw -s 192.168.1.0/24 -p tcp -m multiport --dports 22,53,80,443,1883 -j nixos-fw-accept
     iptables -A nixos-fw -s 192.168.1.0/24 -p udp --dport 53 -j nixos-fw-accept
   '';
   networking.firewall.extraStopCommands = ''
-    iptables -D nixos-fw -s 192.168.1.0/24 -p tcp -m multiport --dports 22,53,80,443 -j nixos-fw-accept || true
+    iptables -D nixos-fw -s 192.168.1.0/24 -p tcp -m multiport --dports 22,53,80,443,1883 -j nixos-fw-accept || true
     iptables -D nixos-fw -s 192.168.1.0/24 -p udp --dport 53 -j nixos-fw-accept || true
   '';
   networking.firewall.trustedInterfaces = [
@@ -82,6 +83,47 @@
   };
 
   hardware.nvidia-container-toolkit.enable = true;
+
+  # CDI spec for the Zigbee coordinator. The generic CDI plugin in the
+  # cluster advertises it, so Zigbee2MQTT gets the stick without a
+  # privileged pod. CDI needs the device node itself, not the by-id
+  # symlink, and the tty number can change on replug. So udev writes
+  # the spec with the current node whenever the ConBee appears, into
+  # the runtime CDI directory containerd already watches.
+  services.udev.extraRules =
+    let
+      template = pkgs.writeText "zigbee-cdi.json" (builtins.toJSON {
+        cdiVersion = "0.5.0";
+        kind = "luisbeu.de/zigbee";
+        devices = [
+          {
+            name = "conbee";
+            containerEdits.deviceNodes = [
+              {
+                path = "/dev/zigbee";
+                hostPath = "@devnode@";
+                permissions = "rw";
+                # 0660 for the dialout group, which the pod joins.
+                fileMode = 432;
+                gid = 27;
+              }
+            ];
+          }
+        ];
+      });
+      # Written beside the spec and renamed, so containerd never reads a
+      # half-written file. The dot name is not a spec extension.
+      writeSpec = pkgs.writeShellScript "zigbee-cdi-spec" ''
+        set -eu
+        ${pkgs.coreutils}/bin/mkdir -p /run/cdi
+        ${pkgs.gnused}/bin/sed "s|@devnode@|$1|" ${template} > /run/cdi/.zigbee.json.tmp
+        ${pkgs.coreutils}/bin/chmod 0444 /run/cdi/.zigbee.json.tmp
+        ${pkgs.coreutils}/bin/mv /run/cdi/.zigbee.json.tmp /run/cdi/zigbee.json
+      '';
+    in
+    ''
+      ACTION=="add", SUBSYSTEM=="tty", ENV{ID_VENDOR_ID}=="1cf1", ENV{ID_SERIAL_SHORT}=="DE2491368", RUN+="${writeSpec} $devnode"
+    '';
 
   programs.coolercontrol.enable = true;
 
